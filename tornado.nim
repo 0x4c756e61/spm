@@ -1,4 +1,4 @@
-import std/[os,strformat, strutils, httpclient], libs/[tlib, utils, paths]
+import std/[os,strformat, strutils, osproc, streams], libs/[tlib, utils, paths]
 
 
 proc proccess_args() =
@@ -10,6 +10,7 @@ proc proccess_args() =
             of "-h", "--help", "help":
                 register_help(["-h", "--help"], "Show this page and quits")
                 register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
+                register_help(["U", "updateDB"], "Updates local fragments list")
                 register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
                 register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
                 register_help(["I", "init"], "Starts the interactive fragment creation tool")
@@ -25,15 +26,32 @@ proc proccess_args() =
                 
                 let file = installPath & pathSeparator & "packages.files"
 
-                if not os.dirExists(installPath): os.createDir(installPath)
-                if (not os.fileExists(file)) or readFile(file) == "":
-                    let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
-                    writeFile(file, fragmentsList)
+                updateDB(installPath, file)
+                
+                let content = readFile(file)
+                for i in (i+1)..paramCount():
+                    let fragment = paramStr(i)
+                    if not (fragment in content): 
+                        error &"Fragment {fragment} not found in local fragments list, maybe try to update the fragments list"
+                    
+                    let git = osproc.startProcess("git", installPath, ["clone", fragment], options={poUsePath})
+                    let gitOut = git.errorStream().readStr(200)
+                    
+                    if gitOut == "":
+                         success &"Fragment {fragment} installed"
+                    
+                    error gitOut
+                    
 
+                quit(0)
                          
             of "r", "remove":
                 warn "Feature not implemented yet!"
                 quit(0)
+            
+            of "U", "updateDB":
+                updateDB(installPath, installPath & pathSeparator & "packages.files")
+                success "Local fragments list was updated"
             
             of "q", "query":
                 warn "Feature not implemented yet!"

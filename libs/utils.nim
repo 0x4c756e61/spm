@@ -1,4 +1,4 @@
-import tlib, strformat, strutils, os
+import tlib, strformat, strutils, os, httpclient
 
 const
     red* = tlib.rgb(255,33,81)
@@ -49,3 +49,9 @@ proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, co
     info &"Created entry file {blue}{configs[6][1]}{dft}"
 
     success "Done creating fragment. Have fun coding with Swirl!"
+
+proc updateDB*(installPath, file:string) =
+    if not os.dirExists(installPath): os.createDir(installPath)
+    if (not os.fileExists(file)) or readFile(file) == "":
+        let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
+        writeFile(file, fragmentsList)
