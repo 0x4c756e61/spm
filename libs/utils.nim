@@ -27,7 +27,7 @@ proc info*(str: string) =
 proc warn*(str: string) =
     stdout.writeLine &"[{yellow}WARN{dft}]       {str}"
 
-proc succes*(str: string) =
+proc success*(str: string) =
     stdout.writeLine &"[{green}SUCCESS{dft}]    {str}" 
 
 proc register_help*(calls: array[0..1,string], desc:string) =
@@ -48,4 +48,4 @@ proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, co
     writeFile(configs[0][1] & pathSeparator & configs[6][1], "func hello() {\nprint(\"Hello world!\")\n}")
     info &"Created entry file {blue}{configs[6][1]}{dft}"
 
-    succes "Done creating fragment. Have fun coding with Swirl!"
+    success "Done creating fragment. Have fun coding with Swirl!"

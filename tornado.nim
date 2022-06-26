@@ -1,4 +1,4 @@
-import std/[os,strformat, strutils], libs/[tlib, utils, paths]
+import std/[os,strformat, strutils, httpclient], libs/[tlib, utils, paths]
 
 
 proc proccess_args() =
@@ -17,9 +17,20 @@ proc proccess_args() =
                 quit(0)
             
             of "i", "install":
-                warn "Feature not implemented yet!"
-                quit(0)
-            
+                # warn "Feature not implemented yet!"
+                # quit(0)
+
+                if paramCount() < i+1:
+                    error "No package(s) provided" 
+                
+                let file = installPath & pathSeparator & "packages.files"
+
+                if not os.dirExists(installPath): os.createDir(installPath)
+                if (not os.fileExists(file)) or readFile(file) == "":
+                    let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
+                    writeFile(file, fragmentsList)
+
+                         
             of "r", "remove":
                 warn "Feature not implemented yet!"
                 quit(0)
