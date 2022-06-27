@@ -1,4 +1,4 @@
-import std/[os,strformat, strutils, osproc, streams], libs/[tlib, utils, paths]
+import std/[os,strformat, strutils, osproc, streams, json], libs/[tlib, utils, paths]
 
 
 proc proccess_args() =
@@ -27,21 +27,20 @@ proc proccess_args() =
                 let file = installPath & pathSeparator & "packages.files"
 
                 updateDB(installPath, file)
-                
-                let content = readFile(file)
+
+                let fragmentsJson = readFile(file).parseJson()
                 for i in (i+1)..paramCount():
                     let fragment = paramStr(i)
-                    if not (fragment in content): 
-                        error &"Fragment {fragment} not found in local fragments list, maybe try to update the fragments list"
-                    
-                    let git = osproc.startProcess("git", installPath, ["clone", fragment], options={poUsePath})
+                    let fragmentUrl = fragmentsJson{fragment}.getStr()
+                    if fragmentUrl == "": error &"Fragment {fragment} not found in local fragments list, maybe try to update the fragments list"
+
+                    let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl], options={poUsePath})
                     let gitOut = git.errorStream().readStr(200)
                     
-                    if gitOut == "":
-                         success &"Fragment {fragment} installed"
-                    
-                    error gitOut
-                    
+                    if gitOut != "": error gitOut
+                    success &"Fragment {fragment} installed"
+                          
+
 
                 quit(0)
                          
