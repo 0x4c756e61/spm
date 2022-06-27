@@ -26,7 +26,8 @@ proc proccess_args() =
                 
                 let file = installPath & pathSeparator & "packages.files"
 
-                updateDB(installPath, file)
+                if (not os.fileExists(file)) or readFile(file) == "":
+                    updateDB(installPath, file)
 
                 let fragmentsJson = readFile(file).parseJson()
                 for i in (i+1)..paramCount():

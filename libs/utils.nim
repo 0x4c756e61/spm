@@ -52,9 +52,8 @@ proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, co
 
 proc updateDB*(installPath, file:string) =
     if not os.dirExists(installPath): os.createDir(installPath)
-    if (not os.fileExists(file)) or readFile(file) == "":
-        let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
-        writeFile(file, fragmentsList)
+    let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
+    writeFile(file, fragmentsList)
 
 # proc getDeps*(fragment:string) =
 #     let yaml = newHttpClient().getContent("https://raw.githubusercontent.com/" & fragment)
