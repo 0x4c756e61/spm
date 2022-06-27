@@ -55,5 +55,9 @@ proc updateDB*(installPath, file:string) =
     let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
     writeFile(file, fragmentsList)
 
+proc repoExists*(link:string):bool =
+    return newHttpClient().get(link).status == "404"
+        
+
 # proc getDeps*(fragment:string) =
 #     let yaml = newHttpClient().getContent("https://raw.githubusercontent.com/" & fragment)

@@ -35,12 +35,14 @@ proc proccess_args() =
                     let fragmentUrl = fragmentsJson{fragment}.getStr()
                     if fragmentUrl == "": error &"Fragment {fragment} not found in local fragments list, maybe try to update the fragments list"
 
+                    if not repoExists(fragmentUrl): error "Repo doesn't exists"
+
                     let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl], options={poUsePath})
                     let gitOut = git.errorStream().readStr(200)
                     
                     if gitOut != "": error gitOut
                     success &"Fragment {fragment} installed"
-                          
+                    
 
 
                 quit(0)
