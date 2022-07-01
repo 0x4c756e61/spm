@@ -42,8 +42,8 @@ proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, co
     info &"Created project directory {blue}{configs[0][1]}{dft}"
     os.createDir(configs[0][1] & pathSeparator & dirname)
     info &"Created directory {blue}{dirname}{dft}"
-    writeFile(configs[0][1] & pathSeparator & "fragment.yaml", config_out)
-    info &"Created metadata file {blue}fragment.yaml{dft}"
+    writeFile(configs[0][1] & pathSeparator & "fragment.json", config_out)
+    info &"Created metadata file {blue}fragment.json{dft}"
 
     writeFile(configs[0][1] & pathSeparator & configs[6][1], "func hello() {\nprint(\"Hello world!\")\n}")
     info &"Created entry file {blue}{configs[6][1]}{dft}"
@@ -56,8 +56,13 @@ proc updateDB*(installPath, file:string) =
     writeFile(file, fragmentsList)
 
 proc repoExists*(link:string):bool =
-    return newHttpClient().get(link).status == "404"
+    return newHttpClient().get(link).status != "404"
         
 
-# proc getDeps*(fragment:string) =
-#     let yaml = newHttpClient().getContent("https://raw.githubusercontent.com/" & fragment)
+proc getMeta*(url:string):string =
+    let
+        userName = url.split("/")[3]
+        repoName = url.split("/")[4][0..^3]
+
+    let fragmentYaml = newHttpClient().getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.yaml")
+    return fragmentYaml

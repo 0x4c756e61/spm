@@ -12,6 +12,7 @@ proc proccess_args() =
                 register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
                 register_help(["U", "updateDB"], "Updates local fragments list")
                 register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
+                register_help(["l", "list"], "Lists all installed fragments and their versions")
                 register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
                 register_help(["I", "init"], "Starts the interactive fragment creation tool")
                 echo help_menu
@@ -43,13 +44,26 @@ proc proccess_args() =
                     if gitOut != "": error gitOut
                     success &"Fragment {fragment} installed"
                     
-
-
                 quit(0)
                          
             of "r", "remove":
-                warn "Feature not implemented yet!"
+                if paramCount() < i+1:
+                    error "No package(s) provided"
+                
+                var installedFragments:seq[string]
+                for dir in walkDirs(installPath & "*"): installedFragments &= dir.split(pathSeparator)[^1]
+                for i in (i+1)..paramCount():
+                    let query = paramStr(i)
+                    if not (query in installedFragments): warn &"Fragment {query} not installed! Skipping it..."; continue
+                    os.removeDir(installPath & query)
+                    success &"Fragment {query} uninstalled"
+                
                 quit(0)
+            
+            of "l", "list":
+                for dir in walkDirs(installPath & "*"):
+                    let metadata = readFile(dir & "/fragment.json").parseJson()
+                    info green & metadata["base"]{"name"}.getStr() & dft & " version " & green & metadata["base"]{"version"}.getStr() & dft & " is installed at " & red & dir & dft
             
             of "U", "updateDB":
                 updateDB(installPath, installPath & pathSeparator & "packages.files")
@@ -92,22 +106,24 @@ proc proccess_args() =
                         else:
                             moveCursorUp 1
                 
-                let config_out = &"""
-frgt-base:
-  frgt-display-name: "{configs[0][1]}"
-  frgt-name: "{configs[1][1]}"
-  frgt-description: "{configs[2][1]}"
-  frgt-upstream: "{configs[3][1]}"
-  frgt-author: "{configs[4][1]}"
-  frgt-ver: {configs[5][1]}
-  frgt-entry-file: "{configs[6][1]}"
+                let config_json = %* {
+                                "base": {
+                                    "display-name":  configs[0][1],
+                                    "name": configs[1][1],
+                                    "description": configs[2][1],
+                                    "author": configs[4][1],
+                                    "upstream": configs[3][1],
+                                    "version": configs[5][1],
+                                    "entry-file": configs[6][1]
+                                },
+                                "dependencies":{
+                                    "requires":configs[7][1].split(','),
+                                    "conflics":configs[8][1].split(',')
+                                    }
+                                }
 
-frgt-deps:
-  requires: {($(configs[7][1].split(',')))[1..^1]}
-  conflicts: {($(configs[8][1].split(',')))[1..^1]}
-"""
-                # echo config_out
-                createProject(configs, pathSeparator, config_out)
+                echo config_json
+                createProject(configs, pathSeparator, pretty(config_json, 4))
                                 
             else:
                 error &"Unknow option: {arg}"
