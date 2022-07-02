@@ -10,8 +10,8 @@ proc proccess_args() =
             of "-h", "--help", "help":
                 register_help(["-h", "--help"], "Show this page and quits")
                 register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
-                register_help(["U", "updateDB"], "Updates local fragments list")
-                register_help(["u", "update"], "Updates local fragments")
+                register_help(["U", "update"], "Updates local fragments list")
+                register_help(["u", "upgrade"], "Updates local fragments")
                 register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
                 register_help(["l", "list"], "Lists all installed fragments and their versions")
                 register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
@@ -40,14 +40,14 @@ proc proccess_args() =
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
 
                     let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl], options={poUsePath})
-                    let gitOut = git.outputStream().readStr(200)
+                    let gitOut = git.errorStream().readStr(200)
                     
                     if gitOut != "": error gitOut
                     success &"Fragment {fragment} installed"
                     
                 quit(0)
             
-            of "u", "update":
+            of "u", "upgrade":
                 for dir in walkDirs(installPath & "*"):
                     let localMeta = readFile(dir & "/fragment.json").parseJson()
                     let remoteMeta = getMeta(localMeta["base"]["upstream"].getStr()).parseJson()
@@ -61,7 +61,7 @@ proc proccess_args() =
                     if localVer != remoteVer:
                         os.removeDir(dir)
                         let git = osproc.startProcess("git", installPath, ["clone", upstream], options={poUsePath})
-                        let gitOut = git.outputStream().readStr(200)
+                        let gitOut = git.errorStream().readStr(200)
                         if gitOut != "": error gitOut
                         success "Updated " & blue & name & dft & " from version " & red & localVer & dft & " to " & green & remoteVer & dft
                     
@@ -89,7 +89,7 @@ proc proccess_args() =
                     let metadata = readFile(dir & "/fragment.json").parseJson()
                     info green & metadata["base"]{"name"}.getStr() & dft & " version " & green & metadata["base"]{"version"}.getStr() & dft & " is installed at " & red & dir & dft
             
-            of "U", "updateDB":
+            of "U", "update":
                 updateDB(installPath, installPath & pathSeparator & "packages.files")
                 success "Local fragments list was updated"
             
