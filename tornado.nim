@@ -39,7 +39,7 @@ proc proccess_args() =
 
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
 
-                    let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl], options={poUsePath})
+                    let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl, "--quiet"], options={poUsePath})
                     let gitOut = git.errorStream().readStr(200)
                     
                     if gitOut != "": error gitOut
@@ -60,8 +60,9 @@ proc proccess_args() =
 
                     if localVer != remoteVer:
                         os.removeDir(dir)
-                        let git = osproc.startProcess("git", installPath, ["clone", upstream], options={poUsePath})
+                        let git = osproc.startProcess("git", installPath, ["clone", upstream, "--quiet"], options={poUsePath})
                         let gitOut = git.errorStream().readStr(200)
+
                         if gitOut != "": error gitOut
                         success "Updated " & blue & name & dft & " from version " & red & localVer & dft & " to " & green & remoteVer & dft
                     
