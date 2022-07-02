@@ -11,7 +11,7 @@ proc proccess_args() =
                 register_help(["-h", "--help"], "Show this page and quits")
                 register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
                 register_help(["U", "updateDB"], "Updates local fragments list")
-                register_help(["u", "update   [ARGS]"], "Updates local fragments")
+                register_help(["u", "update"], "Updates local fragments")
                 register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
                 register_help(["l", "list"], "Lists all installed fragments and their versions")
                 register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
@@ -40,7 +40,7 @@ proc proccess_args() =
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
 
                     let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl], options={poUsePath})
-                    let gitOut = git.errorStream().readStr(200)
+                    let gitOut = git.outputStream().readStr(200)
                     
                     if gitOut != "": error gitOut
                     success &"Fragment {fragment} installed"
@@ -48,7 +48,26 @@ proc proccess_args() =
                 quit(0)
             
             of "u", "update":
-                warn "Feature not implemented yet!"
+                for dir in walkDirs(installPath & "*"):
+                    let localMeta = readFile(dir & "/fragment.json").parseJson()
+                    let remoteMeta = getMeta(localMeta["base"]["upstream"].getStr()).parseJson()
+                    
+                    let
+                        localVer = localMeta["base"]["version"].getStr()
+                        remoteVer = remoteMeta["base"]["version"].getStr()
+                        upstream = localMeta["base"]["upstream"].getStr()
+                        name =  localMeta["base"]["name"].getStr()
+
+                    if localVer != remoteVer:
+                        os.removeDir(dir)
+                        let git = osproc.startProcess("git", installPath, ["clone", upstream], options={poUsePath})
+                        let gitOut = git.outputStream().readStr(200)
+                        if gitOut != "": error gitOut
+                        success "Updated " & blue & name & dft & " from version " & red & localVer & dft & " to " & green & remoteVer & dft
+                    
+                    else:
+                        info green & name & dft & " is up to date, skipping"
+                
                 quit(0)
                          
             of "r", "remove":
