@@ -102,8 +102,8 @@ proc proccess_args() =
                                 description = metadata["base"]["description"].getStr()
 
                             echo &"""
-        {blue}{author}{dft}/{red}{name}{dft} {green}{version}{dft}
-            {description}"""
+{blue}{author}{dft}/{red}{name}{dft} {green}{version}{dft}
+    {description}"""
 
                     if not found: warn &"No packages found for query {query}"
 
