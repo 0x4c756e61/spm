@@ -9,7 +9,7 @@ Tornado is an unofficial package (called fragments) management tool for the Swir
 ### Process
  1) clone (or download zip and extract): `git clone https://github.com/0x454d505459/tornado.git`
  2) change directory: `cd tornado`
- 3) compile: `nim -d:release -d:danger -d:strip --opt:size c tornado.nim`
+ 3) compile: `nim -d:release -d:danger -d:strip --opt:speed -d:ssl c tornado.nim`
  4) get help: `./tornado --help`
 
 ## Usage
