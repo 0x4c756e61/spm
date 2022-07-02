@@ -11,6 +11,7 @@ proc proccess_args() =
                 register_help(["-h", "--help"], "Show this page and quits")
                 register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
                 register_help(["U", "updateDB"], "Updates local fragments list")
+                register_help(["u", "update   [ARGS]"], "Updates local fragments")
                 register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
                 register_help(["l", "list"], "Lists all installed fragments and their versions")
                 register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
@@ -45,6 +46,10 @@ proc proccess_args() =
                     success &"Fragment {fragment} installed"
                     
                 quit(0)
+            
+            of "u", "update":
+                warn "Feature not implemented yet!"
+                quit(0)
                          
             of "r", "remove":
                 if paramCount() < i+1:
@@ -70,9 +75,39 @@ proc proccess_args() =
                 success "Local fragments list was updated"
             
             of "q", "query":
-                warn "Feature not implemented yet!"
-                quit(0)
+                if paramCount() < i+1:
+                    error "No package(s) provided"
 
+                let file = installPath & pathSeparator & "packages.files"
+
+                if (not os.fileExists(file)) or readFile(file) == "":
+                    updateDB(installPath, file)
+                
+                let fragmentsJson = readFile(file).parseJson()
+                for i in (i+1)..paramCount():
+                    let query = paramStr(i)
+                    var found = false
+                    for elem in fragmentsJson.getElems():
+                        var frgt_name = $elem
+                        frgt_name = frgt_name.split(':')[0][2..^2]
+
+                        if query in frgt_name:
+                            found = true
+                            let fragmentUrl = elem[frgt_name].getStr()
+                            let metadata =  getMeta(fragmentUrl).parseJson()
+                            let
+                                author = metadata["base"]["author"].getStr()
+                                name = metadata["base"]["name"].getStr()
+                                version = metadata["base"]["version"].getStr()
+                                description = metadata["base"]["description"].getStr()
+
+                            echo &"""
+        {blue}{author}{dft}/{red}{name}{dft} {green}{version}{dft}
+            {description}"""
+
+                    if not found: warn &"No packages found for query {query}"
+
+                quit(0)
 
             of "I", "init":                
                 var configs = [("Display name",""),

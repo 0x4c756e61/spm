@@ -62,7 +62,6 @@ proc repoExists*(link:string):bool =
 proc getMeta*(url:string):string =
     let
         userName = url.split("/")[3]
-        repoName = url.split("/")[4][0..^3]
+        repoName = url.split("/")[4][0..^5]
 
-    let fragmentYaml = newHttpClient().getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.yaml")
-    return fragmentYaml
+    return newHttpClient().getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.json")
