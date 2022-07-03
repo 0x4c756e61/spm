@@ -1,4 +1,4 @@
-import std/[os,strformat, strutils, osproc, streams, json], libs/[tlib, utils, paths]
+import std/[os,strformat, strutils, json], libs/[tlib, utils, paths]
 
 
 proc proccess_args() =
@@ -76,10 +76,7 @@ proc proccess_args() =
 
                     if localVer != remoteVer:
                         os.removeDir(dir)
-                        let git = osproc.startProcess("git", installPath, ["clone", upstream, "--quiet"], options={poUsePath})
-                        let gitOut = git.errorStream().readStr(200)
-
-                        if gitOut != "": error gitOut
+                        installFragment(installPath, upstream)
                         success "Updated " & blue & name & dft & " from version " & red & localVer & dft & " to " & green & remoteVer & dft
                     
                     else:
