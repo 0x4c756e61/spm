@@ -32,18 +32,34 @@ proc proccess_args() =
                     updateDB(installPath, file)
 
                 let fragmentsJson = readFile(file).parseJson()
+                var installed: seq[string]
+                for dir in walkDirs(installPath & "*"): installed.add(dir)
                 for i in (i+1)..paramCount():
                     let fragment = paramStr(i)
                     let fragmentUrl = fragmentsJson{fragment}.getStr()
-                    if fragmentUrl == "": error &"Fragment {fragment} not found in local fragments list, maybe try to update the fragments list"
+                    if fragmentUrl == "": error &"Fragment '{fragment}' not found in local fragments list, maybe try to update the fragments list"
 
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
-
-                    let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl, "--quiet"], options={poUsePath})
-                    let gitOut = git.errorStream().readStr(200)
-                    
-                    if gitOut != "": error gitOut
+                    info "Installing fragment using git"
+                    installFragment(installPath, fragmentUrl)
                     success &"Fragment {fragment} installed"
+                    info "Processing dependencies and conflics..."
+                    proc recurse(fragment:string) =
+                        let metadata = readFile(installPath & fragment & "/fragment.json").parseJson()
+                        let deps = metadata["dependencies"]["requires"].getElems()
+                        let conflics = metadata["dependencies"]["conflics"].getElems()
+                        for dep in deps:
+                            let dependency = dep.getStr()
+                            let fragmentUrl = fragmentsJson{dependency}.getStr()
+                            if dependency in installed : info &"Dependency '{dependency}' already installed, skipping...";continue
+                            if fragmentUrl == "": warn &"Dependency '{dependency}' not found in local fragments list, you might need to install it manually"; continue
+                            installFragment(installPath, fragmentUrl)
+                            success &"Fragment {dependency} installed"
+                            recurse(dependency)
+                    
+                    recurse(fragment)
+                    info "Done processing dependencies and conflics"
+
                     
                 quit(0)
             

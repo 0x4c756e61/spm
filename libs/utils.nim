@@ -1,4 +1,4 @@
-import tlib, strformat, strutils, os, httpclient
+import tlib, strformat, strutils, os, httpclient, osproc, streams
 
 const
     red* = tlib.rgb(255,33,81)
@@ -65,3 +65,9 @@ proc getMeta*(url:string):string =
         repoName = url.split("/")[4][0..^5]
 
     return newHttpClient().getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.json")
+
+proc installFragment*(installPath, fragmentUrl:string) =
+    let git = osproc.startProcess("git", installPath, ["clone", fragmentUrl, "--quiet"], options={poUsePath})
+    let gitOut = git.errorStream().readStr(200)
+    
+    if gitOut != "": error gitOut
