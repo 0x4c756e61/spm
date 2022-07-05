@@ -1,5 +1,36 @@
 import std/[os,strformat, strutils, json], libs/[tlib, utils, paths]
 
+var 
+    file:string
+    installed: seq[string]
+    fragmentsJson: JsonNode
+    configs = [("Display name",""),
+                ("Fragment name (id)",""),
+                ("Description",""),
+                ("Upstream URL",""),
+                ("Author",""),
+                ("Version","0.0.1"),
+                ("Entry file","src/main.sw"),
+                ("Dependencies (comma separeted)",""),
+                ("Conflicts (comma separeted)","")]
+
+proc updateInstalled() =
+    installed = @[]
+    for dir in walkDirs(installPath & "*"): installed.add(dir.split(pathSeparator)[^1])
+
+proc initSelf() =
+    register_help(["-h", "--help"], "Show this page and quits")
+    register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
+    register_help(["U", "update"], "Updates local fragments list")
+    register_help(["u", "upgrade"], "Updates local fragments")
+    register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
+    register_help(["l", "list"], "Lists all installed fragments and their versions")
+    register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
+    register_help(["I", "init"], "Starts the interactive fragment creation tool")
+    file = installPath & pathSeparator & "packages.files"
+    fragmentsJson = readFile(file).parseJson()
+    updateInstalled()
+    if (not os.fileExists(file)) or readFile(file) == "": updateDB(installPath, file)
 
 proc proccess_args() =
     var discard_next = false
@@ -8,32 +39,22 @@ proc proccess_args() =
         let arg = os.paramStr(i)
         case arg
             of "-h", "--help", "help":
-                register_help(["-h", "--help"], "Show this page and quits")
-                register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
-                register_help(["U", "update"], "Updates local fragments list")
-                register_help(["u", "upgrade"], "Updates local fragments")
-                register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
-                register_help(["l", "list"], "Lists all installed fragments and their versions")
-                register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
-                register_help(["I", "init"], "Starts the interactive fragment creation tool")
                 echo help_menu
                 quit(0)
             
             of "i", "install":
-                # warn "Feature not implemented yet!"
-                # quit(0)
 
                 if paramCount() < i+1:
                     error "No package(s) provided" 
                 
-                let file = installPath & pathSeparator & "packages.files"
+                # let file = installPath & pathSeparator & "packages.files"
 
                 if (not os.fileExists(file)) or readFile(file) == "":
                     updateDB(installPath, file)
 
-                let fragmentsJson = readFile(file).parseJson()
-                var installed: seq[string]
-                for dir in walkDirs(installPath & "*"): installed.add(dir)
+                # let fragmentsJson = readFile(file).parseJson()
+                # var installed: seq[string]
+                # for dir in walkDirs(installPath & "*"): installed.add(dir)
                 for i in (i+1)..paramCount():
                     let fragment = paramStr(i)
                     let fragmentUrl = fragmentsJson{fragment}.getStr()
@@ -42,18 +63,20 @@ proc proccess_args() =
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
                     info "Installing fragment using git"
                     installFragment(installPath, fragmentUrl)
+                    updateInstalled()
                     success &"Fragment {fragment} installed"
                     info "Processing dependencies and conflics..."
                     proc recurse(fragment:string) =
                         let metadata = readFile(installPath & fragment & "/fragment.json").parseJson()
                         let deps = metadata["dependencies"]["requires"].getElems()
-                        let conflics = metadata["dependencies"]["conflics"].getElems()
+                        # let conflics = metadata["dependencies"]["conflics"].getElems()
                         for dep in deps:
                             let dependency = dep.getStr()
                             let fragmentUrl = fragmentsJson{dependency}.getStr()
                             if dependency in installed : info &"Dependency '{dependency}' already installed, skipping...";continue
                             if fragmentUrl == "": warn &"Dependency '{dependency}' not found in local fragments list, you might need to install it manually"; continue
                             installFragment(installPath, fragmentUrl)
+                            updateInstalled()
                             success &"Fragment {dependency} installed"
                             recurse(dependency)
                     
@@ -77,6 +100,7 @@ proc proccess_args() =
                     if localVer != remoteVer:
                         os.removeDir(dir)
                         installFragment(installPath, upstream)
+                        updateInstalled()
                         success "Updated " & blue & name & dft & " from version " & red & localVer & dft & " to " & green & remoteVer & dft
                     
                     else:
@@ -88,12 +112,13 @@ proc proccess_args() =
                 if paramCount() < i+1:
                     error "No package(s) provided"
                 
-                var installedFragments:seq[string]
-                for dir in walkDirs(installPath & "*"): installedFragments &= dir.split(pathSeparator)[^1]
+                # var installedFragments:seq[string]
+                # for dir in walkDirs(installPath & "*"): installedFragments &= dir.split(pathSeparator)[^1]
                 for i in (i+1)..paramCount():
                     let query = paramStr(i)
-                    if not (query in installedFragments): warn &"Fragment {query} not installed! Skipping it..."; continue
+                    if not (query in installed): warn &"Fragment {query} not installed! Skipping it..."; continue
                     os.removeDir(installPath & query)
+                    updateInstalled()
                     success &"Fragment {query} uninstalled"
                 
                 quit(0)
@@ -111,10 +136,10 @@ proc proccess_args() =
                 if paramCount() < i+1:
                     error "No package(s) provided"
 
-                let file = installPath & pathSeparator & "packages.files"
+                # let file = installPath & pathSeparator & "packages.files"
 
-                if (not os.fileExists(file)) or readFile(file) == "":
-                    updateDB(installPath, file)
+                # if (not os.fileExists(file)) or readFile(file) == "":
+                #     updateDB(installPath, file)
                 
                 let fragmentsJson = readFile(file).parseJson()
                 for i in (i+1)..paramCount():
@@ -143,15 +168,15 @@ proc proccess_args() =
                 quit(0)
 
             of "I", "init":                
-                var configs = [("Display name",""),
-                                ("Fragment name (id)",""),
-                                ("Description",""),
-                                ("Upstream URL",""),
-                                ("Author",""),
-                                ("Version","0.0.1"),
-                                ("Entry file","src/main.sw"),
-                                ("Dependencies (comma separeted)",""),
-                                ("Conflicts (comma separeted)","")]
+                # var configs = [("Display name",""),
+                #                 ("Fragment name (id)",""),
+                #                 ("Description",""),
+                #                 ("Upstream URL",""),
+                #                 ("Author",""),
+                #                 ("Version","0.0.1"),
+                #                 ("Entry file","src/main.sw"),
+                #                 ("Dependencies (comma separeted)",""),
+                #                 ("Conflicts (comma separeted)","")]
                
                 for config in configs:
                     let
@@ -196,11 +221,13 @@ proc proccess_args() =
             else:
                 error &"Unknow option: {arg}"
 
-
 when isMainModule:
     try:
         if os.paramCount() < 1:
             error "No argument provided, please check the help using 'tornado --help'" 
+        
+        initUtils()
+        initSelf()
         proccess_args()
     except EKeyboardInterrupt:
         quit(0)

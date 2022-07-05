@@ -18,6 +18,10 @@ var
     tornado [OPTIONS] [ARG]
 
 {red}OPTIONS{dft}:"""
+    webClient: HttpClient
+
+proc initUtils*() =
+    webClient = newHttpClient()
 
 # Basic formating for errors
 proc error*(str: string) =
@@ -97,7 +101,7 @@ proc updateDB*(installPath, file:string) =
     if not os.dirExists(installPath): os.createDir(installPath)
     # Check if the directory where we install packages exists, creating it if it doesn't
 
-    let fragmentsList = newHttpClient().getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
+    let fragmentsList = webClient.getContent("https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files")
     # Create a new web client and that will get the raw data from 'https://raw.githubusercontent.com/0x454d505459/tornado/fragments/packages.files'
 
     writeFile(file, fragmentsList)
@@ -105,7 +109,7 @@ proc updateDB*(installPath, file:string) =
 
 # Checks if a repo exists or not
 proc repoExists*(link:string):bool =
-    return newHttpClient().get(link).status != "404"
+    return webClient.get(link).status != "404"
     # Create a new web client that will make a request to 'link' and return the result of the logical operation 'status != "404"'
 
 # Returns the raw json from the github repo
@@ -115,7 +119,7 @@ proc getMeta*(url:string):string =
         userName = url.split("/")[3]            # Parse the username of the owner from the link :  ["https:", "", "github.com", "0x454d505459", "tornado"]
         repoName = url.split("/")[4][0..^5]     # Get the name of the repository without the ".git"
 
-    return newHttpClient().getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.json")
+    return webClient.getContent("https://raw.githubusercontent.com/" & userName & "/" & repoName & "/main/fragment.json")
     # Create a new web client that will get the raw content of the fragment's metadata file : "https://raw.githubusercontent.com/0x454d505459/tornado/main/fragment.json"
 
 # Clones the git repos in the installation directory
