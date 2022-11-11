@@ -3,7 +3,6 @@ import std/[os,strformat, strutils, json], libs/[tlib, utils, paths]
 var 
     file:string
     installed: seq[string]
-    fragmentsJson: JsonNode
     configs = [("Display name",""),
                 ("Fragment name (id)",""),
                 ("Description",""),
@@ -28,7 +27,6 @@ proc initSelf() =
     registerHelp(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
     registerHelp(["I", "init"], "Starts the interactive fragment creation tool")
     file = installPath & "packages.files"
-    fragmentsJson = readFile(file).parseJson()
     updateInstalled()
     if (not os.fileExists(file)) or readFile(file) == "": updateDB(installPath, file)
 
@@ -52,12 +50,13 @@ proc processArgs() =
                 if (not os.fileExists(file)) or readFile(file) == "":
                     updateDB(installPath, file)
 
-                # let fragmentsJson = readFile(file).parseJson()
+                let fragmentsJson = readFile(file).parseJson()
                 # var installed: seq[string]
                 # for dir in walkDirs(installPath & "*"): installed.add(dir)
                 for i in (i+1)..paramCount():
                     let fragment = paramStr(i)
-                    let fragmentUrl = fragmentsJson{fragment}.getStr()
+                    let fragmentUrl = fragmentsJson[fragment]["upstream"].getStr()
+
                     if fragmentUrl == "": error &"Fragment '{fragment}' not found in local fragments list, maybe try to update the fragments list"
 
                     if not repoExists(fragmentUrl): error "Repo doesn't exists"
@@ -149,16 +148,15 @@ proc processArgs() =
                     for name in fragmentsJson.keys:
                         if query in name:
                             found = true
-                            let fragmentUrl = fragmentsJson[name].getStr()
-                            let metadata =  getMeta(fragmentUrl).parseJson()
+                            let metadata = fragmentsJson[name]
                             let
-                                author = metadata["base"]["author"].getStr()
-                                name = metadata["base"]["name"].getStr()
-                                version = metadata["base"]["version"].getStr()
-                                description = metadata["base"]["description"].getStr()
+                                author = metadata["author"].getStr()
+                                version = metadata["version"].getStr()
+                                description = metadata["description"].getStr()
+                                license = metadata["license"].getStr()
 
                             echo &"""
-{blue}{author}{dft}/{red}{name}{dft} {green}{version}{dft}
+{blue}{author}{dft}/{red}{name}{dft} {green}{version}{dft} -- {blue}{license}{dft}
     {description}"""
 
                     if not found: warn &"No packages found for query {query}"
