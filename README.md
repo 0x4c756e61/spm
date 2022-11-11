@@ -1,5 +1,5 @@
 # TORNADO
-Tornado is an unofficial package (called fragments) management tool for the Swirl programming language.
+Tornado is an official package (called fragments) management tool for the Swirl programming language.
 
 ## Compiling
 ### Requirement
@@ -7,7 +7,7 @@ Tornado is an unofficial package (called fragments) management tool for the Swir
  - At least one brain cell
 
 ### Process
- 1) clone (or download zip and extract): `git clone https://github.com/0x454d505459/tornado.git`
+ 1) clone (or download zip and extract): `git clone https://github.com/SwirlLang/tornado.git`
  2) change directory: `cd tornado`
  3) compile: `nim -d:release -d:danger -d:strip --opt:speed -d:ssl c tornado.nim`
  4) get help: `./tornado --help`
@@ -20,7 +20,7 @@ Tornado is an unofficial package (called fragments) management tool for the Swir
 - create a package: `./tornado init`
 
 ## License
-This software comes under the GPLv3 and later license. See [license.md](https://github.com/0x454d505459/tornado/blob/main/license.md) for more info.
+This software comes under the GPLv3 and later license. See [license.md](https://github.com/SwirlLang/tornado/blob/main/license.md) for more info.
 
 ## Warning
 Software comes as is, without any guarantee.
