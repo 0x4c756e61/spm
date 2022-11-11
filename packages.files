@@ -1,3 +1,10 @@
 {
-    "example-tornado-fragment":"https://github.com/0x454d505459/example-tornado-fragment.git"
+    "example-tornado-fragment":{
+        "display-name":"Example tornado fragment",
+        "description":"An example fragment for the tornado package manager",
+        "author":"0x454d505459",
+        "version":"vNone",
+        "license":"GPLv3 and later",
+        "upstream":"https://github.com/0x454d505459/example-tornado-fragment.git"
+    }
 }
