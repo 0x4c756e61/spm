@@ -10,7 +10,7 @@ const
 
 # First part of our help menu, options will be added latter on with the register_help() procedure
 var
-    help_menu* = &"""
+    helpMenu* = &"""
 {red}TORNADO{dft} version {blue}0.0.1{dft}
 {red}Tornado{dft} is an unofficial package (called fragments) management tool for the {blue}Swirl{dft} programming language.
 
@@ -41,7 +41,7 @@ proc success*(str: string) =
     stdout.writeLine &"[{green}SUCCESS{dft}]    {str}" 
 
 # Auto format the options and append them to the help menu
-proc register_help*(calls: array[0..1,string], desc:string) =
+proc registerHelp*(calls: array[0..1,string], desc:string) =
     ## calls: an array of 2 strings representing the option in the help menu
     ## desc : a description of the command
 
@@ -51,10 +51,10 @@ proc register_help*(calls: array[0..1,string], desc:string) =
     help_menu &= thing & space & desc               # Add the generated line to the help menu
 
 # Creates a project structure with the given configuration
-proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, config_out:string) = 
+proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, configOut:string) = 
     ## configs       : An array of 8 string tuples containing key and value pairs
     ## pathSeparator : The character to use to separate paths ('/' on Unix-like and '\' on windows)
-    ## config_out    : The stringified json version of the config (what will be written to the 'fragment.json' file)
+    ## configOut    : The stringified json version of the config (what will be written to the 'fragment.json' file)
 
     let dirname = configs[6][1].splitPath()[0]
     # Get the name of the source directory using the path of the main file (src/main.sw)
@@ -75,11 +75,11 @@ proc createProject*(configs: array[0..8,(string,string)], pathSeparator:char, co
 
     info &"Created directory {blue}{dirname}{dft}"
 
-    writeFile(configs[0][1] & pathSeparator & "fragment.json", config_out)
+    writeFile(configs[0][1] & pathSeparator & "fragment.json", configOut)
     # configs[0][1] returns the value of the first config tuple: ("Display name","")
     # pathSeparator is the character to use to separate paths ('/' on Unix-like and '\' on windows)
-    # config_out is the stringified json version of the config (what will be written to the 'fragment.json' file)
-    # Writes the config_out to a file called fragment.json in the project's directory (configs[0][1]). Paths are separeted using the pathSeparator
+    # configOut is the stringified json version of the config (what will be written to the 'fragment.json' file)
+    # Writes the configOut to a file called fragment.json in the project's directory (configs[0][1]). Paths are separeted using the pathSeparator
 
     info &"Created metadata file {blue}fragment.json{dft}"
 

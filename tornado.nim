@@ -19,27 +19,27 @@ proc updateInstalled() =
     for dir in walkDirs(installPath & "*"): installed.add(dir.split(pathSeparator)[^1])
 
 proc initSelf() =
-    register_help(["-h", "--help"], "Show this page and quits")
-    register_help(["i", "install  [ARGS]"], "Install the following fragment.s")
-    register_help(["U", "update"], "Updates local fragments list")
-    register_help(["u", "upgrade"], "Updates local fragments")
-    register_help(["r", "remove   [ARGS]"], "Remove the following fragment.s")
-    register_help(["l", "list"], "Lists all installed fragments and their versions")
-    register_help(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
-    register_help(["I", "init"], "Starts the interactive fragment creation tool")
-    file = installPath & pathSeparator & "packages.files"
+    registerHelp(["-h", "--help"], "Show this page and quits")
+    registerHelp(["i", "install  [ARGS]"], "Install the following fragment.s")
+    registerHelp(["U", "update"], "Updates local fragments list")
+    registerHelp(["u", "upgrade"], "Updates local fragments")
+    registerHelp(["r", "remove   [ARGS]"], "Remove the following fragment.s")
+    registerHelp(["l", "list"], "Lists all installed fragments and their versions")
+    registerHelp(["q", "query    [ARGS]"], "Look through the database for fragment.s matching the name")
+    registerHelp(["I", "init"], "Starts the interactive fragment creation tool")
+    file = installPath & "packages.files"
     fragmentsJson = readFile(file).parseJson()
     updateInstalled()
     if (not os.fileExists(file)) or readFile(file) == "": updateDB(installPath, file)
 
-proc proccess_args() =
-    var discard_next = false
+proc processArgs() =
+    var discardNext = false
     for i in 1..os.paramCount():
-        if discard_next: discard_next = false; continue
+        if discardNext: discardNext = false; continue
         let arg = os.paramStr(i)
         case arg
             of "-h", "--help", "help":
-                echo help_menu
+                echo helpMenu
                 quit(0)
             
             of "i", "install":
@@ -138,20 +138,18 @@ proc proccess_args() =
 
                 # let file = installPath & pathSeparator & "packages.files"
 
-                # if (not os.fileExists(file)) or readFile(file) == "":
-                #     updateDB(installPath, file)
+                if (not os.fileExists(file)) or readFile(file) == "":
+                    updateDB(installPath, file)
                 
                 let fragmentsJson = readFile(file).parseJson()
                 for i in (i+1)..paramCount():
                     let query = paramStr(i)
                     var found = false
-                    for elem in fragmentsJson.getElems():
-                        var frgt_name = $elem
-                        frgt_name = frgt_name.split(':')[0][2..^2]
 
-                        if query in frgt_name:
+                    for name in fragmentsJson.keys:
+                        if query in name:
                             found = true
-                            let fragmentUrl = elem[frgt_name].getStr()
+                            let fragmentUrl = fragmentsJson[name].getStr()
                             let metadata =  getMeta(fragmentUrl).parseJson()
                             let
                                 author = metadata["base"]["author"].getStr()
@@ -199,7 +197,7 @@ proc proccess_args() =
                         else:
                             moveCursorUp 1
                 
-                let config_json = %* {
+                let configJson = %* {
                                 "base": {
                                     "display-name":  configs[0][1],
                                     "name": configs[1][1],
@@ -215,8 +213,8 @@ proc proccess_args() =
                                     }
                                 }
 
-                echo config_json
-                createProject(configs, pathSeparator, pretty(config_json, 4))
+                echo configJson
+                createProject(configs, pathSeparator, pretty(configJson, 4))
                                 
             else:
                 error &"Unknow option: {arg}"
@@ -228,6 +226,6 @@ when isMainModule:
         
         initUtils()
         initSelf()
-        proccess_args()
+        processArgs()
     except EKeyboardInterrupt:
         quit(0)

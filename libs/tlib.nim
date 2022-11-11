@@ -8,7 +8,7 @@ proc rgb*(r:Natural, g:Natural, b:Natural): string=
     ## Return RGB escape sequance
     result = &"\e[38;2;{r};{g};{b}m"
 
-proc rgb_bg*(r:Natural, g:Natural, b:Natural): string=
+proc rgbBG*(r:Natural, g:Natural, b:Natural): string=
     ## Return RGB escape sequance
     result = &"\e[48;2;{r};{g};{b}m"
 
