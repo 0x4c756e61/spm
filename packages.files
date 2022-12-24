@@ -1,10 +1,11 @@
-{
-    "example-tornado-fragment":{
-        "display-name":"Example tornado fragment",
-        "description":"An example fragment for the tornado package manager",
-        "author":"0x454d505459",
-        "version":"vNone",
-        "license":"GPLv3 and later",
-        "upstream":"https://github.com/0x454d505459/example-tornado-fragment.git"
-    }
-}
+[{
+    "displayName":"Example tornado fragment",
+    "name":"example-tornado-fragment",
+    "description":"An example fragment (package) for tornado",
+    "author":"0x454d505459",
+    "upstreamURL":"https://github.com/0x454d505459/example-tornado-fragment.git",
+    "version":"vNone",
+    "entryFile":"src/main.sw",
+    "requirements":["some-fragment"],
+    "conflics":["other-fragment"]
+}]
